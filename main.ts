@@ -60,6 +60,12 @@ const getPrize = (maxFrequent: number, maxFrequency: number) =>
 
 const bot = new Bot(Deno.env.get("BOT_TOKEN") ?? "");
 
+bot.command("help", async (ctx) => {
+  await ctx.reply(locales.help(), {
+    reply_to_message_id: ctx.update.message?.message_id,
+  });
+});
+
 bot.command("top", async (ctx) => {
   const users = await kv.list<UserState>({ prefix: [CURRENT_KEY] });
 
