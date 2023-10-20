@@ -6,6 +6,7 @@ import {
 // @deno-types="npm:@types/luxon@3.3.3"
 import { DateTime } from "npm:luxon@3.4.3";
 import { match, P } from "npm:ts-pattern@5.0.5";
+import { locales } from "./locales.ts";
 
 const CURRENT_KEY = Deno.env.get("CURRENT_KEY") || "users-testing-v47238";
 const ATTEMPTS_LIMIT = parseInt(Deno.env.get("ATTEMPTS_LIMIT") || "3", 10);
@@ -74,7 +75,7 @@ bot.command("top", async (ctx) => {
     .slice(0, 20)
     .map((user, index) => `${index + 1}. ${user.displayName} - ${user.coins}`);
 
-  await ctx.reply(["Top players:", ...usersTopStrings].join("\n"), {
+  await ctx.reply([locales.topPlayers(), ...usersTopStrings].join("\n"), {
     reply_to_message_id: ctx.update.message?.message_id,
   });
 });
@@ -89,7 +90,7 @@ bot.on(":dice", async (ctx) => {
     const isForwarded = Boolean(ctx.update.message?.forward_date);
 
     if (isForwarded) {
-      await ctx.reply("Do not forward messages from the casino", {
+      await ctx.reply(locales.doNotCheat(), {
         reply_to_message_id: ctx.update.message?.message_id,
       });
       return;
@@ -122,17 +123,14 @@ bot.on(":dice", async (ctx) => {
       userState.attemptCount >= ATTEMPTS_LIMIT && isCurrentDay;
 
     if (isAttemptsLimitReached) {
-      await ctx.reply(
-        "You have reached your attempts limit for today. Try again tomorrow!",
-        {
-          reply_to_message_id: ctx.update.message?.message_id,
-        }
-      );
+      await ctx.reply(locales.attemptsLimit(ATTEMPTS_LIMIT), {
+        reply_to_message_id: ctx.update.message?.message_id,
+      });
       return;
     }
 
     if (userState.coins < DICE_COST) {
-      await ctx.reply("You don't have enough coins", {
+      await ctx.reply(locales.notEnoughCoins(DICE_COST), {
         reply_to_message_id: ctx.update.message?.message_id,
       });
       return;
@@ -151,12 +149,10 @@ bot.on(":dice", async (ctx) => {
 
     await kv.set(getUserKey(userId), nextUserState);
 
-    const result = isWin
-      ? `You won ${prize} coins`
-      : `You lost ${DICE_COST} coins`;
-    const yourBalance = `Your balance: ${nextUserState.coins} coins`;
+    const result = isWin ? locales.win(prize) : locales.lose(DICE_COST);
+    const yourBalance = locales.yourBalance(nextUserState.coins);
 
-    await ctx.reply(`${result}. ${yourBalance}.`, {
+    await ctx.reply([result, yourBalance].join("\n"), {
       reply_to_message_id: ctx.update.message?.message_id,
     });
   }
