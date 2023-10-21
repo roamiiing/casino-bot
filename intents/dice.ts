@@ -14,6 +14,7 @@ import { UserState } from "../types.ts";
 
 // @deno-types="npm:@types/luxon@3.3.3"
 import { DateTime } from "npm:luxon@3.4.3";
+import { linkFreespinCode } from "./redeemCode.ts";
 
 export default (bot: Bot) =>
   bot.on(":dice", async (ctx) => {
@@ -62,11 +63,12 @@ export default (bot: Bot) =>
 
       if (isAttemptsLimitReached) {
         await ctx.reply(
-          [locales.attemptsLimit(
+          locales.attemptsLimit(
             ATTEMPTS_LIMIT + (userState.extraAttempts ?? 0),
-          )].join("\n"),
+          ),
           {
             reply_to_message_id: ctx.update.message?.message_id,
+            parse_mode: "HTML",
           },
         );
         return;
@@ -96,19 +98,34 @@ export default (bot: Bot) =>
 
       await kv.set(getUserKey(userId), nextUserState);
 
+      const isNotPrivateChat = ctx.chat.type !== "private";
+
       const result = isWin
         ? locales.win(prize, fixedLoss)
         : locales.lose(fixedLoss, prize);
       const yourBalance = locales.yourBalance(nextUserState.coins);
-      const freespinCode = await getFreespinCode(userId);
-      //   const gasTip = locales.gasReminder(gas);
 
       await ctx.reply(
-        [result, yourBalance, freespinCode].filter(Boolean).join("\n"),
+        [result, yourBalance].join(
+          "\n",
+        ),
         {
           reply_to_message_id: ctx.update.message?.message_id,
           parse_mode: "HTML",
         },
       );
+
+      const freespinCode = isNotPrivateChat && await getFreespinCode(userId);
+      const freespinCodeIntergration = freespinCode &&
+        locales.freespinQuote(freespinCode);
+
+      if (freespinCode && freespinCodeIntergration) {
+        const reply = await ctx.reply(freespinCodeIntergration, {
+          reply_to_message_id: ctx.update.message?.message_id,
+          parse_mode: "HTML",
+        });
+
+        linkFreespinCode(freespinCode, reply);
+      }
     }
   });
