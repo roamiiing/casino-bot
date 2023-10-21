@@ -15,4 +15,4 @@ export const IS_PRODUCTION = Deno.env.get("IS_PRODUCTION") === "true";
 export const DICE_COST = 7;
 export const CASINO_DICE = "🎰";
 
-export const FREECODE_PROB = Number(Deno.env.get("FREECODE_PROB") ?? 0.07);
+export const FREECODE_PROB = Number(Deno.env.get("FREECODE_PROB") ?? 0.15);

@@ -9,7 +9,7 @@ const roundValue = (x: number) => {
 // ___--  | ----
 
 const gasFunction = (x: number) => {
-  return Math.max(0.001, (((x + 1) ** Math.log10(x + 1)) - 1) / 39.15);
+  return Math.max(1, (((x + 1) ** Math.log10(x + 1)) - 1) / 39.15);
 };
 
 export const getGasTax = (tradeVolume: number) => {
@@ -20,7 +20,5 @@ export const getGasTax = (tradeVolume: number) => {
 };
 
 if (import.meta.main) {
-  for (let i = 0; i <= 200_00; i += 50) {
-    console.log(i, getGasTax(i));
-  }
+  console.log(getGasTax(7));
 }

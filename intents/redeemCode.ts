@@ -3,7 +3,7 @@ import { Bot } from "https://deno.land/x/grammy@v1.19.2/mod.ts";
 import { kv } from "../kv.ts";
 import { getUserKey } from "../helpers.ts";
 import { UserState } from "../types.ts";
-import { CURRENT_KEY } from "../constants.ts";
+import { CURRENT_KEY, DICE_COST } from "../constants.ts";
 
 export const getCodeKey = (id: string) => [`${CURRENT_KEY}-code-treasure`, id];
 
@@ -82,6 +82,7 @@ export default (bot: Bot) => {
       const nextUserState: UserState = {
         ...userState,
         extraAttempts: (userState?.extraAttempts ?? 0) + 1,
+        coins: userState.coins + DICE_COST,
       };
 
       await kv
@@ -93,7 +94,7 @@ export default (bot: Bot) => {
         ).commit();
 
       return await ctx.reply(
-        "Вот это скорость! У вас теперь есть еще одна крутка, она будет действовать до полуночи по UTC",
+        `Вот это скорость! У вас теперь есть еще одна крутка (и ${DICE_COST} монет), она выйдет почти бесплатная, и она будет действовать до полуночи по UTC`,
       );
     }
 

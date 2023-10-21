@@ -43,17 +43,17 @@ export const getPrize = (
   rolls: number[],
 ) =>
   match([STICKERS[maxFrequent], maxFrequency])
-    .with(["seven", 3], () => ({ isWin: true, prize: 77 }))
-    .with(["lemon", 3], () => ({ isWin: true, prize: 30 }))
-    .with(["cherry", 3], () => ({ isWin: true, prize: 23 }))
-    .with(["bar", 3], () => ({ isWin: true, prize: 21 }))
-    .with([P._, 2], () => ({ isWin: true, prize: 4 + getRollsSum(rolls) }))
-    .otherwise(() => ({ isWin: false, prize: getRollsSum(rolls) }));
+    .with(["seven", 3], () => 77)
+    .with(["lemon", 3], () => 30)
+    .with(["cherry", 3], () => 23)
+    .with(["bar", 3], () => 21)
+    .with([P._, 2], () => 4 + getRollsSum(rolls))
+    .otherwise(() => getRollsSum(rolls) - 3);
 
 export const getFreespinCode = async (userId: number) => {
   if (Math.random() <= FREECODE_PROB) {
     const code = await createFreespinCode(userId);
-    return `\nКстати, кто-то кроме тебя может применить этот подарочный код через \n\`/redeem ${code}\` (тык),\nи получить круточку бесплатно. \nКто же окажется самым быстрым?`;
+    return `\n<i>Кстати, кто-то кроме тебя может применить этот подарочный код через \n<code>/redeem ${code}</code> (тык),\nи получить круточку бесплатно (в личку). \nКто же окажется самым быстрым?</i>`;
   }
   return undefined;
 };
