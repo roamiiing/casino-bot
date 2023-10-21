@@ -62,8 +62,6 @@ export default (bot: Bot) => {
             },
       );
 
-    console.log(code);
-
     if (code.active) {
       if (code.issuedBy === userId) {
         return await ctx.reply(
