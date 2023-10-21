@@ -53,7 +53,7 @@ export const getPrize = (
 export const getFreespinCode = async (userId: number) => {
   if (Math.random() <= FREECODE_PROB) {
     const code = await createFreespinCode(userId);
-    return `\n<i>Кстати, кто-то кроме тебя может применить этот подарочный код через \n<code>/redeem ${code}</code> (тык),\nи получить круточку бесплатно (в личку). \nКто же окажется самым быстрым?</i>`;
+    return code;
   }
   return undefined;
 };

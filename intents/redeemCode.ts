@@ -4,12 +4,16 @@ import { kv } from "../kv.ts";
 import { getUserKey } from "../helpers.ts";
 import { UserState } from "../types.ts";
 import { CURRENT_KEY, DICE_COST } from "../constants.ts";
+import { Message } from "https://deno.land/x/grammy_types@v3.3.0/message.ts";
+import { locales } from "../locales.ts";
 
 export const getCodeKey = (id: string) => [`${CURRENT_KEY}-code-treasure`, id];
 
 export type Code = {
   active: true;
   issuedBy: number;
+  messageId?: number;
+  chatId?: number;
 } | {
   active: false;
 };
@@ -58,6 +62,8 @@ export default (bot: Bot) => {
             },
       );
 
+    console.log(code);
+
     if (code.active) {
       if (code.issuedBy === userId) {
         return await ctx.reply(
@@ -76,6 +82,17 @@ export default (bot: Bot) => {
       if (!userState) {
         return await ctx.reply(
           "Пока ты не сделаешь хотя одну крутку - ты не сможешь пользоваться чужими кодами 🥲",
+        );
+      }
+
+      if (code.chatId && code.messageId) {
+        bot.api.editMessageText(
+          code.chatId,
+          code.messageId,
+          locales.freespinRedeemedQuote(),
+          {
+            parse_mode: "HTML",
+          },
         );
       }
 
@@ -112,4 +129,22 @@ export const createFreespinCode = async (userId: number) => {
     } as Code);
 
   return codeText;
+};
+
+export const linkFreespinCode = async (
+  code: string,
+  message: Message.TextMessage,
+) => {
+  const codeState = await kv.get<Code>(getCodeKey(code)).then((state) =>
+    state.value ?? undefined
+  );
+
+  if (!codeState || !codeState.active) return;
+
+  await kv
+    .set(getCodeKey(code), {
+      ...codeState,
+      messageId: message.message_id,
+      chatId: message.chat.id,
+    });
 };
