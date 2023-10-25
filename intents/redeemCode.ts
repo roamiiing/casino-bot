@@ -97,7 +97,7 @@ export default (bot: Bot) => {
       const nextUserState: UserState = {
         ...userState,
         extraAttempts: (userState?.extraAttempts ?? 0) + 1,
-        coins: userState.coins + DICE_COST,
+        // coins: userState.coins + DICE_COST,
       };
 
       await kv

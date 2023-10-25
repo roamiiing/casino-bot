@@ -94,7 +94,7 @@ export default (bot: Bot) =>
         coins: userState.coins + prize - fixedLoss,
         lastDayUtc: currentDay.toMillis(),
         attemptCount: isCurrentDay ? userState.attemptCount + 1 : 1,
-        extraAttempts: isCurrentDay ? userState.extraAttempts : 0
+        extraAttempts: isCurrentDay ? userState.extraAttempts : 0,
       };
 
       await kv.set(getUserKey(userId), nextUserState);
