@@ -47,6 +47,8 @@ export const getPrize = (
     .with(["lemon", 3], () => 30)
     .with(["cherry", 3], () => 23)
     .with(["bar", 3], () => 21)
+    .with(["seven", 2], () => 10 + getRollsSum(rolls))
+    .with(["lemon", 2], () => 6 + getRollsSum(rolls))
     .with([P._, 2], () => 4 + getRollsSum(rolls))
     .otherwise(() => getRollsSum(rolls) - 3);
 
