@@ -16,6 +16,20 @@ dice(bot);
 redeemCode(bot);
 // init end
 
+bot.command("__debug", async (ctx) => {
+  await ctx.reply(
+    Object.entries({
+      userId: ctx.from?.id,
+      chatId: ctx.chat?.id,
+    })
+      .map(([key, value]) => `${key} : ${value}`)
+      .join("\n"),
+    {
+      reply_to_message_id: ctx.message?.message_id,
+    }
+  );
+});
+
 bot.command("help", async (ctx) => {
   await ctx.reply(locales.help(), {
     reply_to_message_id: ctx.update.message?.message_id,
