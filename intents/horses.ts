@@ -210,8 +210,8 @@ export default (bot: Bot) => {
           },
         );
       }
-      const horseId = Number(_horseId);
-      if (horseId < 1 || horseId > HORSE_COUNT) {
+      const horseId = parseInt(_horseId);
+      if (Number.isNaN(horseId) || horseId < 1 || horseId > HORSE_COUNT) {
         return await ctx.reply(
           `Указан неверный номер лошади (1-${HORSE_COUNT})`,
           {
@@ -240,10 +240,9 @@ export default (bot: Bot) => {
           reply_to_message_id: ctx.update.message?.message_id,
         });
       }
-      const amount = Number(_amount);
+      const amount = parseInt(_amount);
       if (
-        amount <= 0 || amount > coins || Number.isNaN(amount) ||
-        !Number.isFinite(amount)
+        Number.isNaN(amount) || amount <= 0 || amount > coins
       ) {
         return await ctx.reply(
           `Указана неверная ставка (ваш баланс: ${coins})`,
