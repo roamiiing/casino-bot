@@ -112,6 +112,7 @@ const payoff = async (
     .filter((state) => {
       const user = state.key.at(-1);
       if (!state.value || !user || typeof user !== "string") return false;
+      return true;
     })
     .map((state) => {
       const user = state.key.at(-1);
