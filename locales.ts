@@ -1,3 +1,5 @@
+import { round } from "./generators/utils.ts";
+
 const plural = (number: number, titles: string[]): string => {
   const cases = [2, 0, 1, 1, 1, 2];
   const absolute = Math.abs(number);
@@ -10,6 +12,12 @@ const plural = (number: number, titles: string[]): string => {
         : cases[absolute % 10 < 5 ? absolute % 10 : 5]
     ]
   );
+};
+
+const getSafeStringValue = (x: number): { safe: boolean; value: number } => {
+  if (Number.isNaN(x)) return { safe: false, value: 0 };
+  if (!Number.isFinite(x)) return { safe: false, value: 0 };
+  return { safe: true, value: x };
 };
 
 const getRandomFromArray = (arr: string[]) =>
@@ -93,6 +101,32 @@ export const locales = {
     const pluralizedCoins = plural(coins, ["монета", "монеты", "монет"]);
 
     return `Твой баланс: <b>${pluralizedCoins}</b>`;
+  },
+
+  stakesCreated(stakesCount: number) {
+    if (stakesCount === 0) {
+      return "<b>Пока не было ни одной ставки</b>";
+    }
+
+    const pluralizedCount = plural(stakesCount, [
+      "ставка",
+      "ставки",
+      "ставок",
+    ]);
+
+    return `<b>На следующий забег стоит ${pluralizedCount}</b>`;
+  },
+
+  koefs(ks: Record<number | string, number>) {
+    const horseKs = Object.entries(ks).reduce((acc, [horseId, k]) => {
+      const { safe, value } = getSafeStringValue(k);
+      acc += `Лошадь ${Number(horseId) + 1}: <i>${
+        safe ? `x${round(value, 3)}` : "N/A"
+      }</i>\n`;
+      return acc;
+    }, "");
+
+    return `<b>Коэффициенты:</b>\n${horseKs}`;
   },
 
   freespinQuote(code: string) {
