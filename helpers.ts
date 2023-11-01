@@ -3,6 +3,14 @@ import { CURRENT_KEY, FREECODE_PROB } from "./constants.ts";
 import { UserState } from "./types.ts";
 import { createFreespinCode } from "./intents/redeemCode.ts";
 
+// @deno-types="npm:@types/luxon@3.3.3"
+import { DateTime } from "npm:luxon@3.4.3";
+import {
+  CommandContext,
+  Context,
+} from "https://deno.land/x/grammy@v1.19.2/context.ts";
+import { kv } from "./kv.ts";
+
 export const initUserState = (displayName: string): UserState => ({
   displayName,
   coins: 100,
@@ -58,4 +66,46 @@ export const getFreespinCode = async (userId: number) => {
     return code;
   }
   return undefined;
+};
+
+export const getCurrentDate = () => {
+  return DateTime.now().setZone("UTC+7").set({
+    hour: 0,
+    minute: 0,
+    second: 0,
+    millisecond: 0,
+  });
+};
+
+export { DateTime };
+
+export const stripFirst = (str: string) => {
+  if (str.split(/\s+/).length <= 1) return "";
+  return str.replace(/^\S+\s+/, "").trim();
+};
+
+export const getUserStateSafe = async (ctx: CommandContext<Context>) => {
+  const id = ctx.from?.id;
+  if (!id) return;
+
+  let initialized = true;
+  const user = await kv
+    .get<UserState>(getUserKey(id))
+    .then(
+      (state) => {
+        initialized = false;
+        return state.value ??
+          initUserState(
+            ctx.from?.username || ctx.from?.first_name ||
+              `User ID: ${id}`,
+          );
+      },
+    );
+
+  if (!initialized) {
+    await kv
+      .set(getUserKey(id), user);
+  }
+
+  return user;
 };

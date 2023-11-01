@@ -16,3 +16,7 @@ export const DICE_COST = 7;
 export const CASINO_DICE = "🎰";
 
 export const FREECODE_PROB = Number(Deno.env.get("FREECODE_PROB") ?? 0.15);
+
+export const ADMINS = (Deno.env.get("ADMINS") ?? "").split(",").filter((v) =>
+  v.length
+);

@@ -2,6 +2,7 @@ import { Bot } from "https://deno.land/x/grammy@v1.19.2/mod.ts";
 import { ATTEMPTS_LIMIT, CASINO_DICE, DICE_COST } from "../constants.ts";
 import { getGasTax } from "../gas.ts";
 import {
+  DateTime,
   getFreespinCode,
   getMaxFrequency,
   getPrize,
@@ -11,9 +12,6 @@ import {
 import { kv } from "../kv.ts";
 import { locales } from "../locales.ts";
 import { UserState } from "../types.ts";
-
-// @deno-types="npm:@types/luxon@3.3.3"
-import { DateTime } from "npm:luxon@3.4.3";
 import { linkFreespinCode } from "./redeemCode.ts";
 
 export default (bot: Bot) =>
@@ -48,7 +46,7 @@ export default (bot: Bot) =>
               ),
         );
 
-      const currentDay = DateTime.now().set({
+      const currentDay = DateTime.now().setZone("UTC+7").set({
         hour: 0,
         minute: 0,
         second: 0,
