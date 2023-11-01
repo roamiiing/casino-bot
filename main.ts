@@ -1,6 +1,10 @@
 /// <reference lib="deno.unstable" />
 
-import { webhookCallback } from "https://deno.land/x/grammy@v1.19.2/mod.ts";
+import {
+  CommandContext,
+  Context,
+  webhookCallback,
+} from "https://deno.land/x/grammy@v1.19.2/mod.ts";
 
 import { bot } from "./bot.ts";
 import { kv } from "./kv.ts";
@@ -11,7 +15,7 @@ import { CURRENT_KEY, IS_PRODUCTION } from "./constants.ts";
 import redeemCode from "./intents/redeemCode.ts";
 import dice from "./intents/dice.ts";
 import horses from "./intents/horses.ts";
-import { getUserKey, initUserState } from "./helpers.ts";
+import { getUserKey, getUserStateSafe, initUserState } from "./helpers.ts";
 
 // init
 dice(bot);
@@ -62,26 +66,10 @@ bot.command("top", async (ctx) => {
 bot.command("balance", async (ctx) => {
   const id = ctx.from?.id;
   if (!id) return;
-  let initialized = true;
-  const user = await kv
-    .get<UserState>(getUserKey(id))
-    .then(
-      (state) => {
-        initialized = false;
-        return state.value ??
-          initUserState(
-            ctx.from?.username || ctx.from?.first_name ||
-              `User ID: ${id}`,
-          );
-      },
-    );
 
-  if (!initialized) {
-    await kv
-      .set(getUserKey(id), user);
-  }
+  const user = await getUserStateSafe(ctx);
 
-  await ctx.reply(locales.yourBalance(user.coins), {
+  await ctx.reply(locales.yourBalance(user!.coins), {
     reply_to_message_id: ctx.update.message?.message_id,
     parse_mode: "HTML",
   });

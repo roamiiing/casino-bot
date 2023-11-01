@@ -4,6 +4,7 @@ import {
   DateTime,
   getCurrentDate,
   getUserKey,
+  getUserStateSafe,
   stripFirst,
 } from "../helpers.ts";
 import { UserState } from "../types.ts";
@@ -162,7 +163,7 @@ export default (bot: Bot) => {
       reply_to_message_id: ctx.update.message?.message_id,
     });
 
-    const { individualStakes, stakes, ks } = await getStakesAndKs();
+    const { individualStakes, ks } = await getStakesAndKs();
 
     const winner = genPlaces(HORSE_COUNT);
 
@@ -203,7 +204,7 @@ export default (bot: Bot) => {
   });
 
   bot.command("horse", async (ctx) => {
-    if (!ctx.message?.text) return;
+    if (!ctx.message?.text || !ctx.from.id) return;
 
     const [action, _horseId, _amount] = stripFirst(ctx.message.text).split(
       /\s+/,
@@ -227,11 +228,20 @@ export default (bot: Bot) => {
         );
       }
 
-      const data = await kv.get<UserState>(getUserKey(ctx.from.id));
+      // const data = await kv.get<UserState>(getUserKey(ctx.from.id));
 
-      if (!data || !data.value) return;
+      // if (!data || !data.value) {
+      //   return await ctx.reply(
+      //     "Мы с Вами знакомимся первый раз, я конечно запоминаю всех, но придется отправить это сообщение еще раз!",
+      //     {
+      //       reply_to_message_id: ctx.update.message?.message_id,
+      //     },
+      //   );
+      // }
 
-      const { coins } = data.value;
+      const user = await getUserStateSafe(ctx);
+
+      const { coins } = user!;
 
       if (!_amount) {
         return await ctx.reply(
@@ -260,8 +270,8 @@ export default (bot: Bot) => {
       } as HorseBet).set(
         getUserKey(ctx.from.id),
         {
-          ...data.value,
-          coins: data.value.coins - amount,
+          ...user,
+          coins: user!.coins - amount,
         },
       ).commit();
 
