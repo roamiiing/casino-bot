@@ -52,7 +52,7 @@ const HORSE_COUNT = 4;
 
 const getStakesAndKs = async () => {
   const stakes = Object.fromEntries(
-    Array.from({ length: HORSE_COUNT }, (_, i) => [i, 0])
+    Array.from({ length: HORSE_COUNT }, (_, i) => [i, 0]),
   );
   const _bets = await kv.list<HorseBet>({ prefix: getHorsesBetsKey() });
 
@@ -76,7 +76,7 @@ const getStakesAndKs = async () => {
 const payoff = async (
   allStakes: { key: Deno.KvKey; value: HorseBet }[],
   ks: Koefs,
-  winId: number
+  winId: number,
 ) => {
   //getCasinoHorseRevenueKey
 
@@ -104,7 +104,7 @@ const payoff = async (
   }, Object.fromEntries(userList.map((user) => [user, 0])));
 
   const userStates = await kv.getMany<UserState[]>(
-    userList.map((user) => getUserKey(user))
+    userList.map((user) => getUserKey(user)),
   );
 
   const newUserStates: { key: Deno.KvKey; value: UserState }[] = userStates
@@ -118,8 +118,7 @@ const payoff = async (
         key: state.key,
         value: {
           ...(state.value as UserState),
-          coins:
-            state.value!.coins +
+          coins: state.value!.coins +
             (user ? batchedTx?.[user as unknown as number] : 0),
         },
       };
@@ -161,7 +160,7 @@ export default (bot: Bot) => {
     const winner = genPlaces(HORSE_COUNT);
 
     const { buffers, height, width } = drawHorses(
-      createSpeeds(HORSE_COUNT, winner)
+      createSpeeds(HORSE_COUNT, winner),
     );
     const gifBuffer = await renderFramesToGIF(buffers, { height, width });
 
@@ -179,20 +178,20 @@ export default (bot: Bot) => {
         ctx.reply(
           txs.length > 0
             ? [
-                "<b>Поздравляем победителей!</b>\n",
-                ...txs.map(
-                  (tx, i) =>
-                    `<a href="tg://user?id=${tx.to}">Победитель ${
-                      i + 1
-                    }</a>: <b>+${tx.amount}</b>`
-                ),
-              ].join("\n")
+              "<b>Поздравляем победителей!</b>\n",
+              ...txs.map(
+                (tx, i) =>
+                  `<a href="tg://user?id=${tx.to}">Победитель ${
+                    i + 1
+                  }</a>: <b>+${tx.amount}</b>`,
+              ),
+            ].join("\n")
             : "<b>Сегодня никому не удалось победить :(</b>",
           {
             parse_mode: "HTML",
-          }
+          },
         ),
-      40_000
+      40_000,
     );
   });
 
@@ -200,7 +199,7 @@ export default (bot: Bot) => {
     if (!ctx.message?.text || !ctx.from.id) return;
 
     const [action, _horseId, _amount] = stripFirst(ctx.message.text).split(
-      /\s+/
+      /\s+/,
     );
     if (action === "bet") {
       if (!_horseId) {
@@ -208,7 +207,7 @@ export default (bot: Bot) => {
           `Вы не указали номер лошади (1-${HORSE_COUNT})`,
           {
             reply_to_message_id: ctx.update.message?.message_id,
-          }
+          },
         );
       }
       const horseId = Number(_horseId);
@@ -217,7 +216,7 @@ export default (bot: Bot) => {
           `Указан неверный номер лошади (1-${HORSE_COUNT})`,
           {
             reply_to_message_id: ctx.update.message?.message_id,
-          }
+          },
         );
       }
 
@@ -242,12 +241,15 @@ export default (bot: Bot) => {
         });
       }
       const amount = Number(_amount);
-      if (amount <= 0 || amount > coins || Number.isNaN(amount)) {
+      if (
+        amount <= 0 || amount > coins || Number.isNaN(amount) ||
+        !Number.isFinite(amount)
+      ) {
         return await ctx.reply(
           `Указана неверная ставка (ваш баланс: ${coins})`,
           {
             reply_to_message_id: ctx.update.message?.message_id,
-          }
+          },
         );
       }
 
@@ -270,7 +272,7 @@ export default (bot: Bot) => {
         `Вы поставили ${amount} на лошадь под номером ${horseId} на следующие скачки!`,
         {
           reply_to_message_id: ctx.update.message?.message_id,
-        }
+        },
       );
     } else if (action === "result") {
       const result = await kv.get<HorseResult>(getHorsesResultKey());
@@ -300,7 +302,7 @@ export default (bot: Bot) => {
         {
           reply_to_message_id: ctx.update.message?.message_id,
           parse_mode: "HTML",
-        }
+        },
       );
     } else {
       return await ctx.reply(`Неизвестное действие ${action}`, {
