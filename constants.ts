@@ -2,6 +2,12 @@ import "https://deno.land/x/dotenv@v3.2.2/load.ts";
 
 export const BOT_TOKEN = Deno.env.get("BOT_TOKEN") ?? "";
 
+export const KV_URL = Deno.env.get("KV_URL") ?? "";
+
+if (!KV_URL.length) {
+  throw new Error("KV_URL is not defined");
+}
+
 export const CURRENT_KEY = Deno.env.get("CURRENT_KEY") ||
   "users-testing-v47238";
 
