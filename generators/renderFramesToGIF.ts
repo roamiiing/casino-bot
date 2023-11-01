@@ -10,9 +10,12 @@ export const renderFramesToGIF = async (
   images: Uint8Array[],
   options: RenderOptions,
 ) => {
-  const frames =
-    (await Promise.all(images.map((imageBuffer) => Image.decode(imageBuffer))))
-      .map((image) => Frame.from(image, 16));
+  const frames = (await Promise.all(images.map((imageBuffer) => {
+    const img = new Image(options.width, options.height);
+    img.bitmap.set(imageBuffer);
+    return img;
+  })))
+    .map((image) => Frame.from(image, 16));
 
   const gif = new GIF(frames, 0);
 

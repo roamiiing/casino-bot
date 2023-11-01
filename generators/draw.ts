@@ -142,7 +142,7 @@ export const drawHorses = (series: number[][]) => {
       }
     }
 
-    buffers.push(canvas.toBuffer());
+    buffers.push(canvas.getRawBuffer(0, 0, WIDTH, HEIGHT));
   }
 
   return { buffers, height: HEIGHT, width: WIDTH };

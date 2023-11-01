@@ -19,6 +19,7 @@ import {
 import { renderFramesToGIF } from "../generators/renderFramesToGIF.ts";
 import { InputFile } from "https://deno.land/x/grammy@v1.19.2/types.deno.ts";
 import { locales } from "../locales.ts";
+import { Image } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
 
 export const createHorsesKey = (intentType: string, currentDate: DateTime) => [
   `${CURRENT_KEY}-intent-horse`,
@@ -164,9 +165,12 @@ export default (bot: Bot) => {
     );
     const gifBuffer = await renderFramesToGIF(buffers, { height, width });
 
+    const img = new Image(width, height);
+    img.bitmap.set(buffers.at(-1)!);
+
     await kv.set(getHorsesResultKey(), {
       winner: winner,
-      image: buffers.at(-1)!,
+      image: await img.encodeJPEG(),
     });
 
     await ctx.replyWithAnimation(new InputFile(gifBuffer, "horses.gif"));
