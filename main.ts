@@ -33,7 +33,7 @@ bot.command("__debug", async (ctx) => {
       .join("\n"),
     {
       reply_to_message_id: ctx.message?.message_id,
-    },
+    }
   );
 });
 
@@ -74,6 +74,10 @@ bot.command("balance", async (ctx) => {
     parse_mode: "HTML",
   });
 });
+
+bot.errorHandler = (error) => {
+  console.error("Error happened: ", error);
+};
 
 if (IS_PRODUCTION) {
   const handleUpdate = webhookCallback(bot, "std/http");
