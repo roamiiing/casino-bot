@@ -26,16 +26,16 @@ export const createHorsesKey = (intentType: string, currentDate: DateTime) => [
   currentDate.toFormat("MM-dd-yyyy"),
 ];
 
-const getCasinoHorseRevenueKey =
-  () => [`${CURRENT_KEY}-intent-horse`, "revenue"];
+const getCasinoHorseRevenueKey = () => [
+  `${CURRENT_KEY}-intent-horse`,
+  "revenue",
+];
 
 const getHorsesBetsKey = () => createHorsesKey("bet", getCurrentDate());
 
 const getHorsesResultKey = () => createHorsesKey("result", getCurrentDate());
 
-const getHorsesBetByIDKey = (
-  id: string,
-) => [...getHorsesBetsKey(), id];
+const getHorsesBetByIDKey = (id: string) => [...getHorsesBetsKey(), id];
 
 type HorseResult = {
   winner: number;
@@ -52,7 +52,7 @@ const HORSE_COUNT = 4;
 
 const getStakesAndKs = async () => {
   const stakes = Object.fromEntries(
-    Array.from({ length: HORSE_COUNT }, (_, i) => [i, 0]),
+    Array.from({ length: HORSE_COUNT }, (_, i) => [i, 0])
   );
   const _bets = await kv.list<HorseBet>({ prefix: getHorsesBetsKey() });
 
@@ -76,7 +76,7 @@ const getStakesAndKs = async () => {
 const payoff = async (
   allStakes: { key: Deno.KvKey; value: HorseBet }[],
   ks: Koefs,
-  winId: number,
+  winId: number
 ) => {
   //getCasinoHorseRevenueKey
 
@@ -84,17 +84,13 @@ const payoff = async (
 
   const sum = allStakes.reduce((acc, v) => acc + v.value.amount, 0);
 
-  const transactions = allStakes.filter((stake) =>
-    stake.value.horseId === winId
-  ).map<
-    { to: number; amount: number }
-  >(
-    (stake) => {
+  const transactions = allStakes
+    .filter((stake) => stake.value.horseId === winId)
+    .map<{ to: number; amount: number }>((stake) => {
       const prize = Math.floor(stake.value.amount * ks[stake.value.horseId]);
       paid += prize;
       return { to: stake.value.user, amount: prize };
-    },
-  );
+    });
 
   const users = new Set<number>();
 
@@ -108,29 +104,26 @@ const payoff = async (
   }, Object.fromEntries(userList.map((user) => [user, 0])));
 
   const userStates = await kv.getMany<UserState[]>(
-    userList.map((user) => getUserKey(user)),
+    userList.map((user) => getUserKey(user))
   );
 
   const newUserStates: { key: Deno.KvKey; value: UserState }[] = userStates
-    .filter((
-      state,
-    ) => {
+    .filter((state) => {
       const user = state.key.at(-1);
       if (!state.value || !user || typeof user !== "string") return false;
     })
-    .map(
-      (state) => {
-        const user = state.key.at(-1);
-        return {
-          key: state.key,
-          value: {
-            ...(state.value as UserState),
-            coins: state.value!.coins +
-              (user ? batchedTx?.[user as unknown as number] : 0),
-          },
-        };
-      },
-    );
+    .map((state) => {
+      const user = state.key.at(-1);
+      return {
+        key: state.key,
+        value: {
+          ...(state.value as UserState),
+          coins:
+            state.value!.coins +
+            (user ? batchedTx?.[user as unknown as number] : 0),
+        },
+      };
+    });
 
   const totalFee = sum - paid;
 
@@ -168,15 +161,14 @@ export default (bot: Bot) => {
     const winner = genPlaces(HORSE_COUNT);
 
     const { buffers, height, width } = drawHorses(
-      createSpeeds(HORSE_COUNT, winner),
+      createSpeeds(HORSE_COUNT, winner)
     );
     const gifBuffer = await renderFramesToGIF(buffers, { height, width });
 
-    await kv
-      .set(getHorsesResultKey(), {
-        winner: winner,
-        image: buffers.at(-1)!,
-      });
+    await kv.set(getHorsesResultKey(), {
+      winner: winner,
+      image: buffers.at(-1)!,
+    });
 
     await ctx.replyWithAnimation(new InputFile(gifBuffer, "horses.gif"));
 
@@ -187,19 +179,20 @@ export default (bot: Bot) => {
         ctx.reply(
           txs.length > 0
             ? [
-              "<b>Поздравляем победителей!</b>\n",
-              ...txs.map((tx, i) =>
-                `<a href="tg://user?id=${tx.to}">Победитель ${
-                  i + 1
-                }</a>: <b>+${tx.amount}</b>`
-              ),
-            ].join("\n")
+                "<b>Поздравляем победителей!</b>\n",
+                ...txs.map(
+                  (tx, i) =>
+                    `<a href="tg://user?id=${tx.to}">Победитель ${
+                      i + 1
+                    }</a>: <b>+${tx.amount}</b>`
+                ),
+              ].join("\n")
             : "<b>Сегодня никому не удалось победить :(</b>",
           {
             parse_mode: "HTML",
-          },
+          }
         ),
-      40_000,
+      40_000
     );
   });
 
@@ -207,7 +200,7 @@ export default (bot: Bot) => {
     if (!ctx.message?.text || !ctx.from.id) return;
 
     const [action, _horseId, _amount] = stripFirst(ctx.message.text).split(
-      /\s+/,
+      /\s+/
     );
     if (action === "bet") {
       if (!_horseId) {
@@ -215,7 +208,7 @@ export default (bot: Bot) => {
           `Вы не указали номер лошади (1-${HORSE_COUNT})`,
           {
             reply_to_message_id: ctx.update.message?.message_id,
-          },
+          }
         );
       }
       const horseId = Number(_horseId);
@@ -224,7 +217,7 @@ export default (bot: Bot) => {
           `Указан неверный номер лошади (1-${HORSE_COUNT})`,
           {
             reply_to_message_id: ctx.update.message?.message_id,
-          },
+          }
         );
       }
 
@@ -244,64 +237,55 @@ export default (bot: Bot) => {
       const { coins } = user!;
 
       if (!_amount) {
-        return await ctx.reply(
-          `Вы не указали ставку (ваш баланс: ${coins})`,
-          {
-            reply_to_message_id: ctx.update.message?.message_id,
-          },
-        );
+        return await ctx.reply(`Вы не указали ставку (ваш баланс: ${coins})`, {
+          reply_to_message_id: ctx.update.message?.message_id,
+        });
       }
       const amount = Number(_amount);
-      if (amount <= 0 || amount > coins) {
+      if (amount <= 0 || amount > coins || Number.isNaN(amount)) {
         return await ctx.reply(
           `Указана неверная ставка (ваш баланс: ${coins})`,
           {
             reply_to_message_id: ctx.update.message?.message_id,
-          },
+          }
         );
       }
 
       const stakeId = crypto.randomUUID();
 
-      await kv.atomic().set(getHorsesBetByIDKey(stakeId), {
-        user: ctx.from.id,
-        amount: amount,
-        horseId: horseId - 1,
-      } as HorseBet).set(
-        getUserKey(ctx.from.id),
-        {
+      await kv
+        .atomic()
+        .set(getHorsesBetByIDKey(stakeId), {
+          user: ctx.from.id,
+          amount: amount,
+          horseId: horseId - 1,
+        } as HorseBet)
+        .set(getUserKey(ctx.from.id), {
           ...user,
           coins: user!.coins - amount,
-        },
-      ).commit();
+        })
+        .commit();
 
       return await ctx.reply(
         `Вы поставили ${amount} на лошадь под номером ${horseId} на следующие скачки!`,
         {
           reply_to_message_id: ctx.update.message?.message_id,
-        },
+        }
       );
     } else if (action === "result") {
-      const result = await kv
-        .get<HorseResult>(getHorsesResultKey());
+      const result = await kv.get<HorseResult>(getHorsesResultKey());
 
       if (result.value) {
         const { winner, image } = result.value;
 
-        return await ctx.replyWithPhoto(
-          new InputFile(image, "horses.jpg"),
-          {
-            caption: `Выиграла лошадь ${winner + 1}`,
-            reply_to_message_id: ctx.update.message?.message_id,
-          },
-        );
+        return await ctx.replyWithPhoto(new InputFile(image, "horses.jpg"), {
+          caption: `Выиграла лошадь ${winner + 1}`,
+          reply_to_message_id: ctx.update.message?.message_id,
+        });
       } else {
-        return await ctx.reply(
-          "Сегодня скачки еще не проводились",
-          {
-            reply_to_message_id: ctx.update.message?.message_id,
-          },
-        );
+        return await ctx.reply("Сегодня скачки еще не проводились", {
+          reply_to_message_id: ctx.update.message?.message_id,
+        });
       }
     } else if (action === "info") {
       const { individualStakes, ks } = await getStakesAndKs();
@@ -310,11 +294,13 @@ export default (bot: Bot) => {
         [
           locales.stakesCreated(individualStakes.length),
           individualStakes.length > 0 && locales.koefs(ks),
-        ].filter(Boolean).join("\n\n"),
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
         {
           reply_to_message_id: ctx.update.message?.message_id,
           parse_mode: "HTML",
-        },
+        }
       );
     } else {
       return await ctx.reply(`Неизвестное действие ${action}`, {
