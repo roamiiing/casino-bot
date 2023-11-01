@@ -17,10 +17,6 @@ import dice from "./intents/dice.ts";
 import horses from "./intents/horses.ts";
 import { getUserKey, getUserStateSafe, initUserState } from "./helpers.ts";
 
-bot.on("message", (ctx) => {
-  console.log("clear");
-});
-
 // init
 dice(bot);
 redeemCode(bot);
