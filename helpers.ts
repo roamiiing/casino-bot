@@ -3,6 +3,9 @@ import { CURRENT_KEY, FREECODE_PROB } from "./constants.ts";
 import { UserState } from "./types.ts";
 import { createFreespinCode } from "./intents/redeemCode.ts";
 
+// @deno-types="npm:@types/luxon@3.3.3"
+import { DateTime } from "npm:luxon@3.4.3";
+
 export const initUserState = (displayName: string): UserState => ({
   displayName,
   coins: 100,
@@ -58,4 +61,20 @@ export const getFreespinCode = async (userId: number) => {
     return code;
   }
   return undefined;
+};
+
+export const getCurrentDate = () => {
+  return DateTime.now().setZone("UTC+7").set({
+    hour: 0,
+    minute: 0,
+    second: 0,
+    millisecond: 0,
+  });
+};
+
+export { DateTime };
+
+export const stripFirst = (str: string) => {
+  if (str.split(/\s+/).length <= 1) return "";
+  return str.replace(/^\S+\s+/, "").trim();
 };

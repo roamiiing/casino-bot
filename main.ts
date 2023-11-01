@@ -10,10 +10,13 @@ import { UserState } from "./types.ts";
 import { CURRENT_KEY, IS_PRODUCTION } from "./constants.ts";
 import redeemCode from "./intents/redeemCode.ts";
 import dice from "./intents/dice.ts";
+import horses from "./intents/horses.ts";
+import { getUserKey, initUserState } from "./helpers.ts";
 
 // init
 dice(bot);
 redeemCode(bot);
+horses(bot);
 // init end
 
 bot.command("__debug", async (ctx) => {
@@ -26,7 +29,7 @@ bot.command("__debug", async (ctx) => {
       .join("\n"),
     {
       reply_to_message_id: ctx.message?.message_id,
-    }
+    },
   );
 });
 
@@ -53,6 +56,34 @@ bot.command("top", async (ctx) => {
 
   await ctx.reply([locales.topPlayers(), ...usersTopStrings].join("\n"), {
     reply_to_message_id: ctx.update.message?.message_id,
+  });
+});
+
+bot.command("balance", async (ctx) => {
+  const id = ctx.from?.id;
+  if (!id) return;
+  let initialized = true;
+  const user = await kv
+    .get<UserState>(getUserKey(id))
+    .then(
+      (state) => {
+        initialized = false;
+        return state.value ??
+          initUserState(
+            ctx.from?.username || ctx.from?.first_name ||
+              `User ID: ${id}`,
+          );
+      },
+    );
+
+  if (!initialized) {
+    await kv
+      .set(getUserKey(id), user);
+  }
+
+  await ctx.reply(locales.yourBalance(user.coins), {
+    reply_to_message_id: ctx.update.message?.message_id,
+    parse_mode: "HTML",
   });
 });
 
