@@ -148,58 +148,6 @@ const payoff = async (
 };
 
 export default (bot: Bot) => {
-  bot.command("horserun", async (ctx) => {
-    const userId = ctx.from?.id;
-
-    if (!userId || !ADMINS.includes(userId.toString())) return;
-
-    ctx.reply("Активность запущена", {
-      reply_to_message_id: ctx.update.message?.message_id,
-    });
-
-    const { individualStakes, ks } = await getStakesAndKs();
-
-    const winner = genPlaces(HORSE_COUNT);
-
-    const { buffers, height, width } = drawHorses(
-      createSpeeds(HORSE_COUNT, winner),
-    );
-    const gifBuffer = await renderFramesToGIF(buffers, { height, width });
-
-    const img = new Image(width, height);
-    img.bitmap.set(buffers.at(-1)!);
-
-    await kv.set(getHorsesResultKey(), {
-      winner: winner,
-      image: await img.encodeJPEG(),
-    });
-
-    await ctx.replyWithAnimation(new InputFile(gifBuffer, "horses.gif"));
-
-    const txs = await payoff(individualStakes, ks, winner);
-
-    setTimeout(
-      () =>
-        ctx.reply(
-          txs.length > 0
-            ? [
-              "<b>Поздравляем победителей!</b>\n",
-              ...txs.map(
-                (tx, i) =>
-                  `<a href="tg://user?id=${tx.to}">Победитель ${
-                    i + 1
-                  }</a>: <b>+${tx.amount}</b>`,
-              ),
-            ].join("\n")
-            : "<b>Сегодня никому не удалось победить :(</b>",
-          {
-            parse_mode: "HTML",
-          },
-        ),
-      40_000,
-    );
-  });
-
   bot.command("horse", async (ctx) => {
     if (!ctx.message?.text || !ctx.from.id) return;
 
@@ -307,6 +255,56 @@ export default (bot: Bot) => {
           reply_to_message_id: ctx.update.message?.message_id,
           parse_mode: "HTML",
         },
+      );
+    } else if (action === "run") {
+      const userId = ctx.from?.id;
+
+      if (!userId || !ADMINS.includes(userId.toString())) return;
+
+      ctx.reply("Активность запущена", {
+        reply_to_message_id: ctx.update.message?.message_id,
+      });
+
+      const { individualStakes, ks } = await getStakesAndKs();
+
+      const winner = genPlaces(HORSE_COUNT);
+
+      const { buffers, height, width } = drawHorses(
+        createSpeeds(HORSE_COUNT, winner),
+      );
+      const gifBuffer = await renderFramesToGIF(buffers, { height, width });
+
+      const img = new Image(width, height);
+      img.bitmap.set(buffers.at(-1)!);
+
+      await kv.set(getHorsesResultKey(), {
+        winner: winner,
+        image: await img.encodeJPEG(),
+      });
+
+      await ctx.replyWithAnimation(new InputFile(gifBuffer, "horses.gif"));
+
+      const txs = await payoff(individualStakes, ks, winner);
+
+      setTimeout(
+        () =>
+          ctx.reply(
+            txs.length > 0
+              ? [
+                "<b>Поздравляем победителей!</b>\n",
+                ...txs.map(
+                  (tx, i) =>
+                    `<a href="tg://user?id=${tx.to}">Победитель ${
+                      i + 1
+                    }</a>: <b>+${tx.amount}</b>`,
+                ),
+              ].join("\n")
+              : "<b>Сегодня никому не удалось победить :(</b>",
+            {
+              parse_mode: "HTML",
+            },
+          ),
+        40_000,
       );
     } else {
       return await ctx.reply(`Неизвестное действие ${action}`, {
