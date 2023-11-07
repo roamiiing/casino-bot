@@ -20,6 +20,7 @@ export const initUserState = (displayName: string): UserState => ({
 });
 
 export const getUserKey = (id: number) => [CURRENT_KEY, id.toString()];
+export const getRevenueKey = (type: string) => [CURRENT_KEY, "revenue", type];
 
 export const STICKERS = ["bar", "cherry", "lemon", "seven"] as const;
 export const STAKE_PRICE = [1, 1, 2, 3];

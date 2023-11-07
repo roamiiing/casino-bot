@@ -1,11 +1,17 @@
 import { Bot } from "https://deno.land/x/grammy@v1.19.2/mod.ts";
-import { ATTEMPTS_LIMIT, CASINO_DICE, DICE_COST } from "../constants.ts";
+import {
+  ATTEMPTS_LIMIT,
+  CASINO_DICE,
+  CURRENT_KEY,
+  DICE_COST,
+} from "../constants.ts";
 import { getGasTax } from "../gas.ts";
 import {
   DateTime,
   getFreespinCode,
   getMaxFrequency,
   getPrize,
+  getRevenueKey,
   getUserKey,
   initUserState,
 } from "../helpers.ts";
@@ -13,6 +19,8 @@ import { kv } from "../kv.ts";
 import { locales } from "../locales.ts";
 import { UserState } from "../types.ts";
 import { linkFreespinCode } from "./redeemCode.ts";
+
+const diceTaxRevenueKey = getRevenueKey("dice-slots");
 
 export default (bot: Bot) =>
   bot.on(":dice", async (ctx) => {
@@ -95,7 +103,10 @@ export default (bot: Bot) =>
         extraAttempts: isCurrentDay ? userState.extraAttempts : 0,
       };
 
-      await kv.set(getUserKey(userId), nextUserState);
+      await kv.atomic().set(getUserKey(userId), nextUserState).sum(
+        diceTaxRevenueKey,
+        BigInt(fixedLoss),
+      ).commit();
 
       const isNotPrivateChat = ctx.chat.type !== "private";
 

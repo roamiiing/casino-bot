@@ -19,3 +19,4 @@ lerna-debug.log*
 *.gif
 *.png
 .DS_Store
+utils.local

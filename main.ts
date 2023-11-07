@@ -11,11 +11,15 @@ import { kv } from "./kv.ts";
 
 import { locales } from "./locales.ts";
 import { UserState } from "./types.ts";
-import { CURRENT_KEY, IS_PRODUCTION } from "./constants.ts";
+import { CURRENT_KEY, IS_PRODUCTION, KV_URL } from "./constants.ts";
 import redeemCode from "./intents/redeemCode.ts";
 import dice from "./intents/dice.ts";
 import horses from "./intents/horses.ts";
 import { getUserKey, getUserStateSafe, initUserState } from "./helpers.ts";
+
+if (IS_PRODUCTION && !KV_URL.length) {
+  throw new Error("KV_URL is not defined");
+}
 
 // init
 dice(bot);
